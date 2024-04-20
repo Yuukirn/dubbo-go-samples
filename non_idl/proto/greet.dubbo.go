@@ -28,6 +28,8 @@ const (
 	// period.
 	// GreetServiceGreetProcedure is the fully-qualified name of the GreetService's Greet RPC.'
 	GreetServiceGreetProcedure = "/greet.GreetService/greet"
+	// GreetServiceGreet2Procedure is the fully-qualified name of the GreetService's Greet2 RPC.'
+	GreetServiceGreet2Procedure = "/greet.GreetService/greet"
 )
 
 var (
@@ -36,6 +38,7 @@ var (
 
 type GreetService interface {
 	Greet(ctx context.Context, req *GreetRequest, opts ...client.CallOption) (*GreetResponse, error)
+	Greet2(ctx context.Context, name string, age int32, time int64, opts ...client.CallOption) (string, error)
 }
 
 // NewGreetService constructs a client for the greet.GreetService service
@@ -66,9 +69,18 @@ func (c *GreetServiceImpl) Greet(ctx context.Context, req *GreetRequest, opts ..
 	return resp, nil
 }
 
+func (c *GreetServiceImpl) Greet2(ctx context.Context, name string, age int32, time int64, opts ...client.CallOption) (string, error) {
+	resp := new(string)
+	if err := c.conn.CallUnary(ctx, []interface{}{name, age, time}, resp, "greet", opts...); err != nil {
+		return "", err
+	}
+	return *resp, nil
+}
+
 var GreetService_ClientInfo = client.ClientInfo{
 	InterfaceName: "greet.GreetService",
 	MethodNames: []string{
+		"greet",
 		"greet",
 	},
 	ConnectionInjectFunc: func(dubboCliRaw interface{}, conn *client.Connection) {
@@ -80,6 +92,7 @@ var GreetService_ClientInfo = client.ClientInfo{
 // GreetServiceHandler is an implementation of the greet.GreetService service.
 type GreetServiceHandler interface {
 	Greet(ctx context.Context, req *GreetRequest) (*GreetResponse, error)
+	Greet2(ctx context.Context, name string, age int32, time int64) (string, error)
 }
 
 func RegisterGreetServiceHandler(srv *server.Server, hdlr GreetServiceHandler, opts ...server.ServiceOption) error {
@@ -103,6 +116,20 @@ var GreetService_ServiceInfo = server.ServiceInfo{
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
 				req := args[0].(*GreetRequest)
 				res, err := handler.(GreetServiceHandler).Greet(ctx, req)
+				return res, err
+			},
+		},
+		{
+			Name: "greet",
+			Type: constant.CallUnary,
+			ReqInitFunc: func() interface{} {
+				return new(string)
+			},
+			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
+				name := args[0].(string)
+				age := args[1].(int32)
+				time := args[2].(int64)
+				res, err := handler.(GreetServiceHandler).Greet2(ctx, name, age, time)
 				return res, err
 			},
 		},

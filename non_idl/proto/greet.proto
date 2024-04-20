@@ -76,6 +76,8 @@ message GreetResponse {
 
 message Greet2Request {
   string name = 1;
+  int32 age = 2;
+  int64 time = 3;
 
   option (hessian2_extend.message_extend) = {
     extend_args: true;
