@@ -70,9 +70,7 @@ type GreetRequest struct {
 	Way              GreetEnum
 	Inner            *GreetRequest_Internal
 	Time             *java_sql_time.Time
-	Date             *java_sql_time.Date
 	Duration         *java8_time.Duration
-	ZonedDateTime    *java8_time.ZonedDateTime
 	RuntimeException *java_exception.RuntimeException
 	Uuid             *java_util.UUID
 	SelfTime         *java_sql_time.Time
@@ -120,23 +118,9 @@ func (x *GreetRequest) GetTime() *java_sql_time.Time {
 	return nil
 }
 
-func (x *GreetRequest) GetDate() *java_sql_time.Date {
-	if x != nil {
-		return x.Date
-	}
-	return nil
-}
-
 func (x *GreetRequest) GetDuration() *java8_time.Duration {
 	if x != nil {
 		return x.Duration
-	}
-	return nil
-}
-
-func (x *GreetRequest) GetZonedDateTime() *java8_time.ZonedDateTime {
-	if x != nil {
-		return x.ZonedDateTime
 	}
 	return nil
 }

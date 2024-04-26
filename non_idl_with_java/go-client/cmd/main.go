@@ -19,18 +19,20 @@ package main
 
 import (
 	"context"
+)
+
+import (
+	_ "dubbo.apache.org/dubbo-go/v3/imports"
+
 	"dubbo.apache.org/dubbo-go/v3"
 	"dubbo.apache.org/dubbo-go/v3/client"
 	"dubbo.apache.org/dubbo-go/v3/common/constant"
-	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	"dubbo.apache.org/dubbo-go/v3/registry"
-	"github.com/apache/dubbo-go-hessian2/java8_time"
-	"github.com/apache/dubbo-go-hessian2/java_exception"
-	"github.com/apache/dubbo-go-hessian2/java_sql_time"
-	"github.com/apache/dubbo-go-hessian2/java_util"
-	greet_gen "github.com/apache/dubbo-go-samples/non_idl/proto"
 	"github.com/dubbogo/gost/log/logger"
-	java_math "github.com/dubbogo/gost/math/big"
+)
+
+import (
+	greet_gen "github.com/apache/dubbo-go-samples/non_idl_with_java/proto"
 )
 
 func main() {
@@ -62,16 +64,22 @@ func main() {
 	}
 
 	resp, err := svc.Greet(ctx, &greet_gen.GreetRequest{
-		Name:             "dubbo-go",
-		Way:              greet_gen.GreetEnum_GREET_ENUM_1,
-		Time:             &java_sql_time.Time{},
-		Duration:         &java8_time.Duration{},
-		RuntimeException: &java_exception.RuntimeException{},
-		Uuid:             &java_util.UUID{},
-		BigInteger:       &java_math.Integer{},
+		Name: "dubbo-go",
 	})
 	if err != nil {
 		panic(err)
 	}
 	logger.Infof("Greet response: %s", resp.Greeting)
+
+	resp2, err := svc.Greet2(ctx, &greet_gen.Greet2Request{Name: "dubbo-go"})
+	if err != nil {
+		panic(err)
+	}
+	logger.Infof("Greet response: %s", resp2.Greeting)
+
+	resp3, err := svc.Greet3(ctx, "dubbo-go", 20)
+	if err != nil {
+		panic(err)
+	}
+	logger.Infof("Greet3 response: %s", resp3)
 }

@@ -54,9 +54,7 @@ message GreetRequest {
   GreetEnum way = 2;
   Internal inner = 3;
   java_sql_time.Time time = 4;
-  java_sql_time.Date date = 5;
   java8_time.Duration duration = 6;
-  java8_time.ZonedDateTime zoned_date_time = 7;
   java_exception.RuntimeException runtime_exception = 8;
   java_util.UUID uuid = 9;
   self_extension.Time self_time = 10;
@@ -74,32 +72,8 @@ message GreetResponse {
   };
 }
 
-message Greet2Request {
-  string name = 1;
-  int32 age = 2;
-  int64 time = 3;
-
-  option (hessian2_extend.message_extend) = {
-    extend_args: true;
-  };
-}
-
-message Greet2Response {
-  string greeting = 1;
-  option (hessian2_extend.message_extend) = {
-    extend_args: true;
-  };
-}
-
 service GreetService {
   rpc Greet(GreetRequest) returns (GreetResponse) {
-    option (hessian2_extend.method_extend) = {
-      method_name: "greet";
-    };
-  }
-
-  rpc Greet2(Greet2Request) returns (Greet2Response) {
-    // NOTE: service will panic when go-server use override method
     option (hessian2_extend.method_extend) = {
       method_name: "greet";
     };

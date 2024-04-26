@@ -17,7 +17,7 @@ import (
 
 const (
 	// GreetServiceName is the fully-qualified name of the GreetService service.
-	GreetServiceName = "greet.GreetService"
+	GreetServiceName = "org.apache.dubbo.springboot.demo.GreetProvider"
 
 	// These constants are the fully-qualified names of the RPCs defined in this package. They're
 	// exposed at runtime as procedure and as the final two segments of the HTTP route.
@@ -27,7 +27,11 @@ const (
 	// reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 	// period.
 	// GreetServiceGreetProcedure is the fully-qualified name of the GreetService's Greet RPC.'
-	GreetServiceGreetProcedure = "/greet.GreetService/greet"
+	GreetServiceGreetProcedure = "/org.apache.dubbo.springboot.demo.GreetProvider/greet"
+	// GreetServiceGreet2Procedure is the fully-qualified name of the GreetService's Greet2 RPC.'
+	GreetServiceGreet2Procedure = "/org.apache.dubbo.springboot.demo.GreetProvider/greet"
+	// GreetServiceGreet3Procedure is the fully-qualified name of the GreetService's Greet3 RPC.'
+	GreetServiceGreet3Procedure = "/org.apache.dubbo.springboot.demo.GreetProvider/greet"
 )
 
 var (
@@ -36,11 +40,13 @@ var (
 
 type GreetService interface {
 	Greet(ctx context.Context, req *GreetRequest, opts ...client.CallOption) (*GreetResponse, error)
+	Greet2(ctx context.Context, req *Greet2Request, opts ...client.CallOption) (*Greet2Response, error)
+	Greet3(ctx context.Context, name string, age int32, opts ...client.CallOption) (string, error)
 }
 
-// NewGreetService constructs a client for the greet.GreetService service
+// NewGreetService constructs a client for the org.apache.dubbo.springboot.demo.GreetProvider service
 func NewGreetService(cli *client.Client, opts ...client.ReferenceOption) (GreetService, error) {
-	conn, err := cli.DialWithInfo("greet.GreetService", &GreetService_ClientInfo, opts...)
+	conn, err := cli.DialWithInfo("org.apache.dubbo.springboot.demo.GreetProvider", &GreetService_ClientInfo, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +72,27 @@ func (c *GreetServiceImpl) Greet(ctx context.Context, req *GreetRequest, opts ..
 	return resp, nil
 }
 
+func (c *GreetServiceImpl) Greet2(ctx context.Context, req *Greet2Request, opts ...client.CallOption) (*Greet2Response, error) {
+	resp := new(Greet2Response)
+	if err := c.conn.CallUnary(ctx, []interface{}{req}, resp, "greet", opts...); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *GreetServiceImpl) Greet3(ctx context.Context, name string, age int32, opts ...client.CallOption) (string, error) {
+	resp := new(string)
+	if err := c.conn.CallUnary(ctx, []interface{}{name, age}, resp, "greet", opts...); err != nil {
+		return "", err
+	}
+	return *resp, nil
+}
+
 var GreetService_ClientInfo = client.ClientInfo{
-	InterfaceName: "greet.GreetService",
+	InterfaceName: "org.apache.dubbo.springboot.demo.GreetProvider",
 	MethodNames: []string{
+		"greet",
+		"greet",
 		"greet",
 	},
 	ConnectionInjectFunc: func(dubboCliRaw interface{}, conn *client.Connection) {
@@ -77,9 +101,11 @@ var GreetService_ClientInfo = client.ClientInfo{
 	},
 }
 
-// GreetServiceHandler is an implementation of the greet.GreetService service.
+// GreetServiceHandler is an implementation of the org.apache.dubbo.springboot.demo.GreetProvider service.
 type GreetServiceHandler interface {
 	Greet(ctx context.Context, req *GreetRequest) (*GreetResponse, error)
+	Greet2(ctx context.Context, req *Greet2Request) (*Greet2Response, error)
+	Greet3(ctx context.Context, name string, age int32) (string, error)
 }
 
 func RegisterGreetServiceHandler(srv *server.Server, hdlr GreetServiceHandler, opts ...server.ServiceOption) error {
@@ -91,7 +117,7 @@ func SetProviderService(srv common.RPCService) {
 }
 
 var GreetService_ServiceInfo = server.ServiceInfo{
-	InterfaceName: "greet.GreetService",
+	InterfaceName: "org.apache.dubbo.springboot.demo.GreetProvider",
 	ServiceType:   (*GreetServiceHandler)(nil),
 	Methods: []server.MethodInfo{
 		{
@@ -103,6 +129,31 @@ var GreetService_ServiceInfo = server.ServiceInfo{
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
 				req := args[0].(*GreetRequest)
 				res, err := handler.(GreetServiceHandler).Greet(ctx, req)
+				return res, err
+			},
+		},
+		{
+			Name: "greet",
+			Type: constant.CallUnary,
+			ReqInitFunc: func() interface{} {
+				return new(Greet2Response)
+			},
+			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
+				req := args[0].(*Greet2Request)
+				res, err := handler.(GreetServiceHandler).Greet2(ctx, req)
+				return res, err
+			},
+		},
+		{
+			Name: "greet",
+			Type: constant.CallUnary,
+			ReqInitFunc: func() interface{} {
+				return new(string)
+			},
+			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
+				name := args[0].(string)
+				age := args[1].(int32)
+				res, err := handler.(GreetServiceHandler).Greet3(ctx, name, age)
 				return res, err
 			},
 		},
